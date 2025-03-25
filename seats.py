@@ -9,6 +9,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
 
 
+#
+#  A test file.....
+
 def write(path, word):
     for w in word:
         sleep(random.uniform(0.03, 0.09))

@@ -16,7 +16,7 @@ from selenium.webdriver.common.keys import Keys
 from key_detect import keyboard, KeyPress
 
 class Reserver:
-    def __init__(self, headless, url, proxy, from_addr, to_addr, date, month, service_no, phone, email, selected_seats, passenger_list):
+    def __init__(self, headless, url, proxy, from_addr, to_addr, date, service_no, phone, email, selected_seats, passenger_list):
 
         self.firefox_options = webdriver.FirefoxOptions()
         if headless:
@@ -41,7 +41,6 @@ class Reserver:
         self.to_addr = to_addr#"kangra"
 
         self.journy_date = date#"14"
-        self.journy_month = month
         self.desired_service_no = service_no
 
         self.phone = phone
@@ -346,7 +345,37 @@ class Reserver:
 
 
 
-    def date_input(self):
+    def date_input(self, date_str: str = None):
+
+        if date_str == None:
+            date_str = self.journy_date
+
+        # date_str  = "28-03-2025"
+        # Convert to datetime object 
+        date_obj = datetime.strptime(date_str, "%d-%m-%Y")
+        month_year = date_obj.strftime("%B %Y")  # Output: "March 2025"
+        day = date_obj.strftime("%d")  # Output: "28"
+
+        print("Month & Year: ", month_year)
+        print("Day: ", day)
+
+        current_date = datetime.today()
+
+        # Calculate difference in months
+        year_diff = date_obj.year - current_date.year
+        month_diff = date_obj.month - current_date.month
+        total_month_diff = year_diff * 12 + month_diff
+
+        print(f"The diffence current and entered month : {total_month_diff}")
+
+        if total_month_diff > 2:
+            print("HTRC only allow booking upto 3 months form current month")
+            print("So, please enter the accordingly...")
+            
+            self.close()
+            exit()
+
+
         xpath_date = '//*[@id="txtJourneyDate"]'
         try:
             
@@ -357,28 +386,32 @@ class Reserver:
         
         date.click()
 
-        sleep(random.uniform(0.2, 0.8))
-        write(date, self.journy_date)
-        sleep(random.uniform(0.9, 2.5))
+    
+        sleep(random.uniform(0.5, 1.2))
+        # write(date, self.journy_date)
+        # sleep(random.uniform(0.9, 2.5))
         # next_button = driver.find_element(By.CLASS_NAME, "ui-datepicker-next")
         # next_button.click()
 
+        for i in range(3):
+            current_month_year = self.max_wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "ui-datepicker-title"))).text
 
-        date_picker = self.max_wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "ui-datepicker-calendar")))
-            
+            if month_year in current_month_year:
+                break
 
-        december_table_xpath = "//div[contains(@class, 'ui-datepicker-group-last')]//table"
-        december_table = self.driver.find_element(By.XPATH, december_table_xpath)
+            else:
+                # Click the next button to navigate to the next month
+                next_btn = self.max_wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "ui-datepicker-next")))
+                next_btn.click()
+                sleep(random.uniform(1.5, 2.5)) # Wait for transition
 
-
-        # Select a specific date from December (e.g., "20")
-        date_xpath = f".//a[text()='{self.journy_date}']"  # Relative XPath within the December table
-        date_element = december_table.find_element(By.XPATH, date_xpath)
-
-        # Click the desired date
+        # Select the specific date (e.g., 27)
+        date_element = self.driver.find_element(By.XPATH, f"//a[text()='{day}']")
         date_element.click()
+
         sleep(random.uniform(1.2, 2.5))
-        print(f"Selected date: {self.journy_date}")
+        print(f"Selected date: {date_str}")
+
 
 
     def search_btn(self):
@@ -577,3 +610,6 @@ if __name__ == "__main__":
     htrc_res.select_service()
     htrc_res.show_layout()
     seats, window = htrc_res.get_seats_data()
+
+    # date_str = "28-05-2025"
+    # date_input(date_str)

@@ -16,9 +16,9 @@ class SeatLocker:
         self.from_addr = "Shimla isbt"
         self.to_addr = "kangra"
 
-        self.journy_date = "28"
-        self.journy_month = 3
+        self.journy_date = "27-04-2025"
         self.service_no = "10"
+
         self.url = "https://online.hrtchp.com/oprs-web/guest/home.do?h=1"
 
         self.db = PyDb()
@@ -74,7 +74,7 @@ class SeatLocker:
 
 
         reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-                        self.journy_month, self.service_no, None, None, selected_seats, None)
+                        self.service_no, None, None, selected_seats, None)
         
         reserver.hold_selected_seat(self)
 
@@ -101,7 +101,7 @@ class SeatLocker:
 
 
         self.main_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-                            self.journy_month, self.service_no, get_phone(), self.email, None, None)
+                            self.service_no, get_phone(), self.email, None, None)
         
         self.ord_seats, self.window_seats = self.main_reserver.get_avail_seats()
 
@@ -164,7 +164,7 @@ class SeatLocker:
 
 
             # thrd_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-            #                 self.journy_month, self.service_no, get_phone(), self.email, selected_seats, passenger_list)
+            #                 self.service_no, get_phone(), self.email, selected_seats, passenger_list)
             
             # self.reserver_obj[self.obj_count] = thrd_reserver
             # thrd_reserver.run_thrd()
@@ -195,13 +195,12 @@ if __name__ == "__main__":
     seat_locker = SeatLocker()
 
     date_str = "25-03-2025"
-    time_str = "12:50"
+    time_str = "15:50"
 
     seat_locker.from_addr = "Shimla isbt"
     seat_locker.to_addr = "kangra"
-    seat_locker.journy_date = "28"
-    seat_locker.journy_month = 3
-    seat_locker.service_no = "10"
+    seat_locker.journy_date = "28-03-2025"
+    seat_locker.service_no = "261"
 
     selected_seats = []
     use_proxy = False
