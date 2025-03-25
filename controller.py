@@ -1,8 +1,10 @@
 from threading import Thread
 from reserver import Reserver
-from util import get_passenger_list, sleep, PyDb, get_phone
+from util import get_passenger_list, sleep, PyDb, get_phone, get_email
 import random
 from prox import Proxy
+import time
+from datetime import datetime
 
 class Controller:
     def __init__(self):
@@ -14,8 +16,8 @@ class Controller:
         self.from_addr = "Shimla isbt"
         self.to_addr = "kangra"
 
-        self.journy_date = "8"
-        self.journy_month = 12
+        self.journy_date = "28"
+        self.journy_month = 3
         self.service_no = "10"
         self.url = "https://online.hrtchp.com/oprs-web/guest/home.do?h=1"
 
@@ -29,16 +31,61 @@ class Controller:
         self.obj_count = 0
         self.proxy_obj = Proxy()
 
+    def run_until(self, date_str, time_str):
+        # Combine date and time into a single string
+        datetime_str = f"{date_str} {time_str}"
+
+        # Convert to datetime object
+        dt = datetime.strptime(datetime_str, "%d-%m-%Y %H:%M")
+
+        print("Converted Datetime:", dt)
 
 
+        # Set the target end time (YYYY, MM, DD, HH, MM, SS)
+        end_time = dt  # Example: Run until March 24, 2025, 3:30 PM
 
-    def book_method_2(self):
-        pass
+        while datetime.now() < end_time:
+            print("Script is running...")
+            time.sleep(5)  # Wait for 5 seconds before checking again
+
+        print("Time reached! Script stopped.")
+
+
+    def book_method_2(self, selected_seats: list = None, use_proxy = False):
+        """To hold a specific seat...."""
+        proxy = None
+        fastest_proxy = []
+
+        if use_proxy:
+            if len(self.proxy_obj.working_proxies) == 0:
+                #get proxy ony first run
+                self.proxy_obj.run()
+
+            fastest_proxy = self.proxy_obj.get_faster_proxy(count=10)
+            if len(fastest_proxy) == 0:
+                print("No proxy found...")
+                use_proxy = False
+
+            else:
+                proxy = fastest_proxy[0]
+
+        if len(selected_seats) == 0:
+            selected_seats = None
+
+
+        reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
+                        self.journy_month, self.service_no, None, None, selected_seats, None)
+        
+        selected_seats = [1,2,3]
+        reserver.hold_selected_seat(self)
+
 
     
     def book_method_1(self, use_proxy = True):
         proxy = None
         fastest_proxy = []
+
+
 
         if use_proxy:
             if len(self.proxy_obj.working_proxies) == 0:
@@ -59,6 +106,9 @@ class Controller:
         
         self.ord_seats, self.window_seats = self.main_reserver.get_avail_seats()
 
+        print(f"self.ord_seats ==> {self.ord_seats}")
+        print(f"self.window_seats  ==> {self.window_seats}")
+
         self.combined_seats = []
         if len(self.ord_seats) != 0:
             self.combined_seats.append(self.ord_seats)
@@ -67,6 +117,7 @@ class Controller:
             self.combined_seats.append(self.window_seats)
 
         print("Total Seats : ", len(self.window_seats) + len(self.ord_seats))
+
         
         total_proxy = len(fastest_proxy)
         on_proxy = 1
@@ -141,5 +192,9 @@ class Controller:
 
 
 if __name__ == "__main__":
+
+    selected_seats = []
+
     cont = Controller()
-    cont.book_method_1()
+
+    cont.book_method_2(use_proxy=False, selected_seats = selected_seats)

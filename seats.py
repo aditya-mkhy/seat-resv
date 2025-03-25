@@ -35,7 +35,7 @@ seats_book_list = [8, 12, 16, 20, 24, 28]
 
 
 firefox_options = webdriver.FirefoxOptions()
-firefox_options.add_argument("--headless")  # Run Firefox in headless mode
+# firefox_options.add_argument("--headless")  # Run Firefox in headless mode
 firefox_options.add_argument("--width=1920")  # Set screen width
 firefox_options.add_argument("--height=1080")# options.add_argument("-headless")
 

@@ -9,10 +9,11 @@ from typing import List
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
-from util import write
+from util import write, get_phone, get_email
 from selenium.webdriver.remote.webelement import WebElement
 from threading import Thread
 from selenium.webdriver.common.keys import Keys
+from key_detect import keyboard, KeyPress
 
 class Reserver:
     def __init__(self, headless, url, proxy, from_addr, to_addr, date, month, service_no, phone, email, selected_seats, passenger_list):
@@ -30,8 +31,6 @@ class Reserver:
             self.firefox_options.set_preference("network.proxy.http_port", int(self.proxy.split(':')[1]))
             self.firefox_options.set_preference("network.proxy.ssl", self.proxy.split(':')[0])
             self.firefox_options.set_preference("network.proxy.ssl_port", int(self.proxy.split(':')[1]))
-
-
         
 
         self.current_month = datetime.now().month
@@ -54,6 +53,123 @@ class Reserver:
         self.thrd = None
 
         self.book_time = 0
+
+    def hold_selected_seat(self, parent, selected_seats = None):
+        self.start_browser()
+        self.from_place()
+        self.to_place()
+        self.date_input()
+        self.search_btn()
+        self.select_service()
+        self.show_layout()
+
+        is_seat_selected = False
+
+        print(f"selected_seat... {selected_seats}and parent == {parent}")
+
+        if selected_seats:
+            self.selected_seats = selected_seats
+
+        print(f"Selected : {self.selected_seats}")
+
+        if not self.selected_seats:
+
+            ord_seats, window_seats = self.get_seats_data()
+            # combine all the seats...
+            window_seats.extend(ord_seats)
+
+            print("Now, Please select the seats...")
+            
+            key = keyboard.Key.shift_r
+            detect = KeyPress(key)
+
+            #Wait until the key is pressed..
+            status = detect.wait()
+
+
+            remain_seat_ord, remain_win_seat = self.get_seats_data()
+            remain_win_seat.extend(remain_seat_ord)
+
+            self.selected_seats = self.remove_list_from_list(window_seats, remain_win_seat)
+            is_seat_selected = True
+
+        else:
+            # run until the seat is available for booking
+            count = 0
+            while True:
+
+
+                list1, list2 = self.get_seats_data()
+                list1.extend(list2)
+                count += 1
+
+
+                if not self.check_if_present(list1, self.selected_seats):
+                    print(f"{count}) Seats are still occupied..")
+                    #sleep for 1 minute..
+                    time.sleep(60)
+                    # after sleeping.. refresh the page
+                    self.show_layout()
+                    print("Clicked on layout button...")
+                    time.sleep(2)
+
+                else:
+                    print(f"Seats are availabe for blocking....")
+                    break
+
+
+
+        print(f"Selected Seat : {self.selected_seats}")
+
+        self.passenger_list = parent.passenger_info(count=len(self.selected_seats))
+        print(self.passenger_list)
+
+        self.phone = get_phone()
+        self.email_id = get_email(self.passenger_list)
+
+        print(f"Phone : {self.phone}")
+        print(f"Email : {self.email_id}")
+
+        # if the seat is selected by the user...
+        if not is_seat_selected:
+            self.select_seats(to_select = self.selected_seats)
+
+        self.mobile_email_input()
+        self.passenger_details(passenger_list = self.passenger_list)
+        self.book_button()
+
+        # time for booking.....
+        self.book_time = time.time()
+        self.payment()
+
+        # self.is_finished = True
+
+        sleep(1)
+        print("Task is finished, now repeting that task...")
+        self.driver.quit()
+
+        self.hold_selected_seat(parent = parent, selected_seats = self.selected_seats)
+
+
+
+
+    def check_if_present(self, big_list: list, small_list: list):
+        # to chek if all the items of the small list is present in the big list
+        for item in small_list:
+            if item not in big_list:
+                return False
+        return True
+    
+    
+    def remove_list_from_list(self, list1: list, list2: list) -> list:
+        remaining_item = []
+
+        for item in list1:
+            if item not in list2:
+                remaining_item.append(item)
+
+        return remaining_item
+
 
     def get_avail_seats(self) -> (List[List[str]]):
         return self.run(get_data=True)
@@ -281,7 +397,7 @@ class Reserver:
             show_layout_btn = self.max_wait.until(EC.element_to_be_clickable((By.XPATH, show_layout)))
         except:
             print("Show Layout button is not found...")
-            self.close()
+            print(f"..............Error..............")
         sleep(random.uniform(1, 2))
         show_layout_btn.click()
 

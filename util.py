@@ -32,6 +32,15 @@ class PyDb(dict):
         super().__setitem__(key, value)
         self.write()
         
+def get_email(passengers : list):
+    one_passenger = random.choice(passengers)
+    one_passenger = one_passenger[0].replace(" ", "").lower()
+
+    num = random.randint(100, 100304)
+
+    domain = random.choice(["gmail", "yahoo", "hotmail"])
+
+    return f"{one_passenger}{num}@{domain}.com"
 
 def get_phone():
     number = str(random.randint(6, 9))
