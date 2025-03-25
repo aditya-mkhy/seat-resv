@@ -54,6 +54,8 @@ class Reserver:
 
         self.book_time = 0
 
+        self.prev_time = 0
+
     def hold_selected_seat(self, parent, selected_seats = None):
         self.start_browser()
         self.from_place()
@@ -65,7 +67,8 @@ class Reserver:
 
         is_seat_selected = False
 
-        print(f"selected_seat... {selected_seats}and parent == {parent}")
+        print(f"selected_seat... {selected_seats} and parent == {parent}")
+        print(f"EndTime : {parent.end_time}")
 
         if selected_seats:
             self.selected_seats = selected_seats
@@ -85,7 +88,8 @@ class Reserver:
 
             #Wait until the key is pressed..
             status = detect.wait()
-
+            if status:
+                print("KeyPressed: Next...")
 
             remain_seat_ord, remain_win_seat = self.get_seats_data()
             remain_win_seat.extend(remain_seat_ord)
@@ -111,7 +115,17 @@ class Reserver:
                     # after sleeping.. refresh the page
                     self.show_layout()
                     print("Clicked on layout button...")
-                    time.sleep(2)
+                    time.sleep(10)
+
+                    #check for end time
+                    if parent.end_time != None:
+                        if datetime.now() >= parent.end_time:
+                            print("Time reached! Script stopped.")
+                            self.close()
+                            exit()
+
+                    else:
+                        print("It's None...")
 
                 else:
                     print(f"Seats are availabe for blocking....")
@@ -137,20 +151,43 @@ class Reserver:
         self.mobile_email_input()
         self.passenger_details(passenger_list = self.passenger_list)
         self.book_button()
+        
+
+        #check for end time
+        if parent.end_time != None:
+            if datetime.now() >= parent.end_time:
+                print("Time reached! Script stopped.")
+                self.close()
+                exit()
 
         # time for booking.....
         self.book_time = time.time()
         self.payment()
 
-        # self.is_finished = True
+        print(f"Time=================================> {time.time()}")
+        if self.prev_time:
+            print(f"Time Taken :  {time.time() - self.prev_time}")
 
-        sleep(1)
+        self.prev_time = time.time()
+
+        # self.is_finished = True
+                            
+               
+        #sleep for 16 minutes....
+        self.sleep_wait(parent=parent, mint = 16)
         print("Task is finished, now repeting that task...")
         self.driver.quit()
 
         self.hold_selected_seat(parent = parent, selected_seats = self.selected_seats)
 
-
+    def sleep_wait(self, parent, mint: int):
+        for i in range(mint):
+            time.sleep(60)
+            if parent.end_time != None:
+                if datetime.now() >= parent.end_time:
+                    print("Time reached! Script stopped.")
+                    self.close()
+                    exit()
 
 
     def check_if_present(self, big_list: list, small_list: list):

@@ -6,7 +6,7 @@ from prox import Proxy
 import time
 from datetime import datetime
 
-class Controller:
+class SeatLocker:
     def __init__(self):
         #setting
 
@@ -28,6 +28,9 @@ class Controller:
         self.min_select_seat = 4
         self.max_select_seat = 6
 
+        #time to stop code exe
+        self.end_time = None
+
         self.obj_count = 0
         self.proxy_obj = Proxy()
 
@@ -36,25 +39,22 @@ class Controller:
         datetime_str = f"{date_str} {time_str}"
 
         # Convert to datetime object
-        dt = datetime.strptime(datetime_str, "%d-%m-%Y %H:%M")
 
-        print("Converted Datetime:", dt)
-
-
-        # Set the target end time (YYYY, MM, DD, HH, MM, SS)
-        end_time = dt  # Example: Run until March 24, 2025, 3:30 PM
-
-        while datetime.now() < end_time:
-            print("Script is running...")
-            time.sleep(5)  # Wait for 5 seconds before checking again
-
-        print("Time reached! Script stopped.")
+        self.end_time = datetime.strptime(datetime_str, "%d-%m-%Y %H:%M")
+        print(f"Stop Time : {self.end_time}")
 
 
-    def book_method_2(self, selected_seats: list = None, use_proxy = False):
+    def hold_seat(self, selected_seats: list = None, use_proxy = False, upto: datetime  = None):
         """To hold a specific seat...."""
         proxy = None
         fastest_proxy = []
+
+        #check for end time
+        if self.end_time != None:
+            if datetime.now() >= self.end_time:
+                print("Time reached! Script stopped.")
+                exit()
+
 
         if use_proxy:
             if len(self.proxy_obj.working_proxies) == 0:
@@ -76,7 +76,6 @@ class Controller:
         reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
                         self.journy_month, self.service_no, None, None, selected_seats, None)
         
-        selected_seats = [1,2,3]
         reserver.hold_selected_seat(self)
 
 
@@ -193,8 +192,21 @@ class Controller:
 
 if __name__ == "__main__":
 
+    seat_locker = SeatLocker()
+
+    date_str = "25-03-2025"
+    time_str = "12:50"
+
+    seat_locker.from_addr = "Shimla isbt"
+    seat_locker.to_addr = "kangra"
+    seat_locker.journy_date = "28"
+    seat_locker.journy_month = 3
+    seat_locker.service_no = "10"
+
     selected_seats = []
+    use_proxy = False
 
-    cont = Controller()
+    # set the end time...
+    seat_locker.run_until(date_str = date_str, time_str = time_str)
 
-    cont.book_method_2(use_proxy=False, selected_seats = selected_seats)
+    seat_locker.hold_seat(use_proxy = use_proxy, selected_seats = selected_seats)
