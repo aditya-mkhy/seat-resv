@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from threading import Thread
 import time
-
+from util import log
 
 class Proxy:
     def __init__(self):
@@ -18,6 +18,19 @@ class Proxy:
         self.test_url = "https://mahadevadity8080.pythonanywhere.com/ipaddr"
         self.child = []
         self.conn_speed = {}
+
+    def get_my_proxy(self):
+        if len(self.working_proxies) == 0:
+            #get proxy ony first run
+            self.run()
+
+        fastest_proxy = self.get_faster_proxy(count=10)
+        if len(fastest_proxy) == 0:
+            log("There is no proxy server..So we can't hide..")
+            return False
+        
+        return fastest_proxy[0]
+       
 
     def run(self):
         self.get_proxies()

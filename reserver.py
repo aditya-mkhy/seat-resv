@@ -9,11 +9,10 @@ from typing import List, TYPE_CHECKING
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
-from util import write, get_phone, get_email, timeCal
+from util import write, get_phone, get_email, timeCal, log
 from selenium.webdriver.remote.webelement import WebElement
 from threading import Thread
 from selenium.webdriver.common.keys import Keys
-from key_detect import keyboard, KeyPress
 
 if TYPE_CHECKING:
     from seat_holder import SeatHolder
@@ -55,8 +54,25 @@ class Reserver:
         self.thrd = None
 
         self.book_time = 0
-
         self.prev_time = 0
+        self.is_completed = False
+
+    def hold_selected_seat_forver(self, parent: 'SeatHolder', selected_seats = None):
+        # holding seat until the time expires
+        try:
+            self.hold_selected_seat(parent=parent, selected_seats=selected_seats)
+
+        except Exception as e:
+            log(f"Error[hold_selected_seat_forver] : {e}")
+
+            if parent.is_doomsday(for_this_date=self.journy_date) or self.is_completed:
+                log(f"Task is completed on date : {self.journy_date}")
+                return
+            
+            log(f"Restarting the task of date : {self.journy_date}")
+            self.hold_selected_seat_forver(parent=parent, selected_seats=selected_seats)
+
+
 
     def hold_selected_seat(self, parent: 'SeatHolder', selected_seats = None):
         self.start_browser()
@@ -85,13 +101,13 @@ class Reserver:
 
             print("Now, Please select the seats...")
             
-            key = keyboard.Key.shift_r
-            detect = KeyPress(key)
+            # key = keyboard.Key.shift_r
+            # detect = KeyPress(key)
 
             #Wait until the key is pressed..
-            status = detect.wait()
-            if status:
-                print("KeyPressed: Next...")
+            # status = detect.wait()
+            # if status:
+            #     print("KeyPressed: Next...")
 
             remain_seat_ord, remain_win_seat = self.get_seats_data()
             remain_win_seat.extend(remain_seat_ord)

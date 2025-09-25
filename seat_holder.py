@@ -6,7 +6,7 @@ from prox import Proxy
 from typing import Dict
 from datetime import datetime
 from util import log
-import sys
+import os
 import time
 
 class MutliReserver(Reserver):
@@ -119,24 +119,19 @@ class SeatHolder:
 
     def is_doomsday(self, for_this_date: str = None):
         #check for script end time
-        if self.end_time == None:
-            return
+        if self.end_time != None  and datetime.now() >= self.end_time:
+            log("Doomsday time! The world is going to end. Bye....", type="warn")
+            os._exit(0) # close everything....
         
         if for_this_date:
             for_this_date = f"{for_this_date} 23:59"
             this_date = datetime.strptime(for_this_date, "%d-%m-%Y %H:%M")
-            print(this_date)
             
             if datetime.now() >= this_date:
                 return True
             
             return False
 
-
-        if datetime.now() >= self.end_time:
-            log("Doomsday time! The world is going to end. Bye....", type="warn")
-            sys.exit(0)
-            
 
 
     def hold_seat(self, selected_seats: list = None, use_proxy = False, upto: datetime  = None):
@@ -281,7 +276,7 @@ class SeatHolder:
 
 if __name__ == "__main__":
 
-    seat_holder = SeatHolder(headless_mode = False)
+    seat_holder = SeatHolder(headless_mode = True)
 
     date_str = "17-10-2025"
     time_str = "01:00"
