@@ -2,6 +2,34 @@ import random
 from time import sleep
 import csv
 import json
+import logging
+from datetime import datetime
+from typing import Literal
+
+# Create log file with current date
+log_filename = f"logs/server_{datetime.now().strftime('%Y-%m-%d')}.log"
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",  # <== time format here
+    handlers=[
+        logging.FileHandler(log_filename),
+        logging.StreamHandler()
+    ]
+)
+
+def log(*args, type: Literal["info", "error", "warn"] = "info", **kwargs):
+    if type == "info":
+        logging.info(*args, **kwargs)
+
+    elif type == "error":
+        logging.error(*args, **kwargs)
+
+    elif type == "warn":
+        logging.warning(*args, **kwargs)
+
 
 class PyDb(dict):
     def __init__(self):
@@ -85,6 +113,18 @@ def write(path, word):
 
 def get_age():
     return str(random.randint(14, 50))
+
+def timeCal(sec):
+    if sec < 60:
+        return f"{int(sec)} Sec"
+    elif sec < 3600:
+        return f"{sec//60}:{ str(sec%60)[:2]} Mint"
+    elif sec < 216000:
+        return f"{sec//3600}:{ str(sec%3600)[:2]} Hrs"
+    elif sec < 12960000:
+        return f"{sec//216000}:{ str(sec%216000)[:2]} Days"
+    else:
+        return "CE"
 
 
 if __name__ == "__main__":

@@ -7,11 +7,11 @@ import time
 from datetime import datetime
 
 class SeatLocker:
-    def __init__(self):
+    def __init__(self, headless_mode = False):
         #setting
 
         self.use_proxy = True
-        self.headless_mode = False
+        self.headless_mode = headless_mode
 
         self.from_addr = "Shimla isbt"
         self.to_addr = "kangra"
@@ -34,6 +34,7 @@ class SeatLocker:
         self.obj_count = 0
         self.proxy_obj = Proxy()
 
+
     def run_until(self, date_str, time_str):
         # Combine date and time into a single string
         datetime_str = f"{date_str} {time_str}"
@@ -42,6 +43,9 @@ class SeatLocker:
 
         self.end_time = datetime.strptime(datetime_str, "%d-%m-%Y %H:%M")
         print(f"Stop Time : {self.end_time}")
+
+    def hold_for_multiple_dates(self, data: dict, use_proxy = False):
+        print("pass....")
 
 
     def hold_seat(self, selected_seats: list = None, use_proxy = False, upto: datetime  = None):
@@ -192,17 +196,17 @@ class SeatLocker:
 
 if __name__ == "__main__":
 
-    seat_locker = SeatLocker()
+    seat_locker = SeatLocker(headless_mode = False)
 
-    date_str = "25-03-2025"
-    time_str = "15:50"
+    date_str = "17-10-2025"
+    time_str = "01:00"
 
     seat_locker.from_addr = "Shimla isbt"
     seat_locker.to_addr = "kangra"
-    seat_locker.journy_date = "28-03-2025"
+    seat_locker.journy_date = "25-09-2025"
     seat_locker.service_no = "261"
 
-    selected_seats = []
+    selected_seats = ['20', '25', '30', '21', '31']
     use_proxy = False
 
     # set the end time...

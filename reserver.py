@@ -5,15 +5,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
 import time
 import random
-from typing import List
+from typing import List, TYPE_CHECKING
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
-from util import write, get_phone, get_email
+from util import write, get_phone, get_email, timeCal
 from selenium.webdriver.remote.webelement import WebElement
 from threading import Thread
 from selenium.webdriver.common.keys import Keys
 from key_detect import keyboard, KeyPress
+
+if TYPE_CHECKING:
+    from SeatLocker import SeatLocker
 
 class Reserver:
     def __init__(self, headless, url, proxy, from_addr, to_addr, date, service_no, phone, email, selected_seats, passenger_list):
@@ -55,7 +58,7 @@ class Reserver:
 
         self.prev_time = 0
 
-    def hold_selected_seat(self, parent, selected_seats = None):
+    def hold_selected_seat(self, parent: 'SeatLocker', selected_seats = None):
         self.start_browser()
         self.from_place()
         self.to_place()
@@ -163,17 +166,16 @@ class Reserver:
         self.book_time = time.time()
         self.payment()
 
-        print(f"Time=================================> {time.time()}")
+        print(f"Time =======> { datetime.fromtimestamp(self.book_time)}")
+        
         if self.prev_time:
-            print(f"Time Taken :  {time.time() - self.prev_time}")
+            print(f"Time Taken :  {timeCal(time.time() - self.prev_time)}")
 
         self.prev_time = time.time()
-
         # self.is_finished = True
-                            
                
-        #sleep for 16 minutes....
-        self.sleep_wait(parent=parent, mint = 16)
+        #sleep for 20 minutes....
+        self.sleep_wait(parent=parent, mint = 5)
         print("Task is finished, now repeting that task...")
         self.driver.quit()
 
@@ -327,18 +329,6 @@ class Reserver:
 
         auto_complete_css = '#ui-id-8'
 
-        # auto_complete2 = self.max_wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, auto_complete_css)))
-      
-
-            
-        # list_items2 = auto_complete2.find_elements(By.TAG_NAME, "a")
-        # # Print the text of each <li> element
-        # n = 1
-        # for a_tag in list_items2:
-        #     print(f"Item {n}: {a_tag.text}")
-        #     n += 1
-        # #click on 1st elemnt from list 
-        # list_items2[0].click()
         going_to.send_keys(Keys.ENTER)
         sleep(random.uniform(1.5, 4.5))
 
@@ -448,10 +438,14 @@ class Reserver:
                 if self.desired_service_no in service_no_element.text:
                     # Found the desired service number
                     print(f"Service {self.desired_service_no} found.")
-                    
+                       #scroll to the seat....
+
                     # Locate the associated button and click it
                     button = rows.find_element(By.CLASS_NAME, "btnSelectLO")
-                    sleep(random.uniform(1.3, 4))
+
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+
+                    sleep(random.uniform(1.3, 3))
                     ActionChains(self.driver).move_to_element(button).click().perform()
                     print(f"Clicked the 'Select Seats' button for service {self.desired_service_no}.")
                     break
