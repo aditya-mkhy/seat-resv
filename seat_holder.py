@@ -3,35 +3,62 @@ from reserver import Reserver
 from util import get_passenger_list, sleep, PyDb, get_phone, get_email
 import random
 from prox import Proxy
-import time
+from typing import Dict
 from datetime import datetime
+from util import log
+import sys
+import time
 
-class SeatLocker:
+class MutliReserver(Reserver):
+    def __init__(self, myname: str, data: dict, url: str, headless: bool = False, proxy: str = None):
+        
+        self.myname = myname
+        self.thread = None
+
+        # init the inherited class
+        super().__init__(
+            headless = headless,
+            url = url,
+            proxy = proxy,
+            from_addr = data["from"],
+            to_addr = data["to"],
+            date = data["date"],
+            service_no = data["service_no"],
+            phone = None,
+            email = None,
+            selected_seats = data["seat"],
+            passenger_list = None
+        )
+
+        log(f"Init MultiReserver with name = {self.myname}")
+
+
+    def thread_hold_selected_seat(self, parent: "SeatHolder"):
+        log(f"Running MultiReserver with name = {self.myname}")
+        self.thread = Thread(target=self.hold_selected_seat, args=(parent,), daemon=True)
+        self.thread.start()
+
+
+
+class SeatHolder:
     def __init__(self, headless_mode = False):
         #setting
 
         self.use_proxy = True
         self.headless_mode = headless_mode
 
-        self.from_addr = "Shimla isbt"
-        self.to_addr = "kangra"
+        self.from_addr = None
+        self.to_addr = None
+        self.journy_date = None
+        self.service_no = None
 
-        self.journy_date = "27-04-2025"
-        self.service_no = "10"
-
+        # time to stop the script
+        self.end_time = None
         self.url = "https://online.hrtchp.com/oprs-web/guest/home.do?h=1"
 
+
+        self.reserver_obj: Dict[str, MutliReserver] = {}
         self.db = PyDb()
-
-        self.reserver_obj = {}
-        self.email = "makemelove@gmail.com"
-        self.min_select_seat = 4
-        self.max_select_seat = 6
-
-        #time to stop code exe
-        self.end_time = None
-
-        self.obj_count = 0
         self.proxy_obj = Proxy()
 
 
@@ -39,26 +66,84 @@ class SeatLocker:
         # Combine date and time into a single string
         datetime_str = f"{date_str} {time_str}"
 
-        # Convert to datetime object
-
         self.end_time = datetime.strptime(datetime_str, "%d-%m-%Y %H:%M")
-        print(f"Stop Time : {self.end_time}")
+        log(f"Script stop time : {self.end_time}")
+
+
 
     def hold_for_multiple_dates(self, data: dict, use_proxy = False):
-        print("pass....")
+        log("fun <- hold_for_multiple_dates -> running....")
+        log(f"for data --> {data}")
+
+        """
+        data = {
+            "task_id" : {
+                "date" : "25-09-2025",
+                "from" : "Shimla isbt",
+                "to"   : "kangra",
+                "service_no" : "261",
+                "seat" : ['20', '25', '30', '21', '31']
+            }
+            ...
+        }
+        """
+
+        for name in data:
+            if self.is_doomsday(for_this_date=data[name]['date']):
+                log(f"This date({data[name]['date']}) is already passed.. skipping this one", type='warn')
+                continue
+
+            proxy = use_proxy and self.proxy_obj.get_my_proxy()
+
+            multi_reserver = MutliReserver(
+                myname = name, 
+                data = data[name], 
+                url = self.url,
+                headless = self.headless_mode,
+                proxy = proxy,
+            )
+
+            multi_reserver.thread_hold_selected_seat(parent = self)
+
+            self.reserver_obj[name] = multi_reserver
+
+        
+        # all threads are running
+        log(f"All process are running on threads..count = {len(self.reserver_obj)}")
+
+        for obj in self.reserver_obj.values():
+            obj.thread.join()
+
+        log(f"MultiReserver task completed successfully.....")
+
+
+    def is_doomsday(self, for_this_date: str = None):
+        #check for script end time
+        if self.end_time == None:
+            return
+        
+        if for_this_date:
+            for_this_date = f"{for_this_date} 23:59"
+            this_date = datetime.strptime(for_this_date, "%d-%m-%Y %H:%M")
+            print(this_date)
+            
+            if datetime.now() >= this_date:
+                return True
+            
+            return False
+
+
+        if datetime.now() >= self.end_time:
+            log("Doomsday time! The world is going to end. Bye....", type="warn")
+            sys.exit(0)
+            
 
 
     def hold_seat(self, selected_seats: list = None, use_proxy = False, upto: datetime  = None):
         """To hold a specific seat...."""
         proxy = None
         fastest_proxy = []
-
-        #check for end time
-        if self.end_time != None:
-            if datetime.now() >= self.end_time:
-                print("Time reached! Script stopped.")
-                exit()
-
+        self.is_doomsday()
 
         if use_proxy:
             if len(self.proxy_obj.working_proxies) == 0:
@@ -196,20 +281,69 @@ class SeatLocker:
 
 if __name__ == "__main__":
 
-    seat_locker = SeatLocker(headless_mode = False)
+    seat_holder = SeatHolder(headless_mode = False)
 
     date_str = "17-10-2025"
     time_str = "01:00"
+    seat_holder.run_until(date_str = date_str, time_str = time_str)
 
-    seat_locker.from_addr = "Shimla isbt"
-    seat_locker.to_addr = "kangra"
-    seat_locker.journy_date = "25-09-2025"
-    seat_locker.service_no = "261"
+    data = {
+        "for 14-OCT" : {
+            "date" : "14-10-2025",
+            "from" : "Shimla isbt",
+            "to"   : "kangra",
+            "service_no" : "1701",
+            "seat" : ['25'],
+        },
 
-    selected_seats = ['20', '25', '30', '21', '31']
-    use_proxy = False
+        "for 15-OCT" : {
+            "date" : "15-10-2025",
+            "from" : "Shimla isbt",
+            "to"   : "kangra",
+            "service_no" : "1701",
+            "seat" : ['25'],
+        },
+    
+        "for 16-OCT" : {
+            "date" : "16-10-2025",
+            "from" : "Shimla isbt",
+            "to"   : "kangra",
+            "service_no" : "1701",
+            "seat" : ['25'],
+        },
 
-    # set the end time...
-    seat_locker.run_until(date_str = date_str, time_str = time_str)
+        "for 17-OCT" : {
+            "date" : "17-10-2025",
+            "from" : "Shimla isbt",
+            "to"   : "kangra",
+            "service_no" : "1701",
+            "seat" : ['25'],
+        },
+    }
 
-    seat_locker.hold_seat(use_proxy = use_proxy, selected_seats = selected_seats)
+    while True:
+        try:
+
+            seat_holder.hold_for_multiple_dates(data=data, use_proxy=False)
+
+        except Exception as e:
+            log(f"Error[001] : {e}")
+
+        sleep(60)
+
+
+
+    # seat_locker.from_addr = "Shimla isbt"
+    # seat_locker.to_addr = "kangra"
+    # seat_locker.journy_date = "25-09-2025"
+    # seat_locker.service_no = "261"
+
+    # selected_seats = ['20', '25', '30', '21', '31']
+    # use_proxy = False
+
+    # # set the end time...
+    # seat_locker.run_until(date_str = date_str, time_str = time_str)
+
+    # print(seat_locker.is_doomsday(for_this_date=seat_locker.journy_date))
+
+    # # seat_locker.hold_seat(use_proxy = use_proxy, selected_seats = selected_seats)

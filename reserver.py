@@ -16,7 +16,7 @@ from selenium.webdriver.common.keys import Keys
 from key_detect import keyboard, KeyPress
 
 if TYPE_CHECKING:
-    from SeatLocker import SeatLocker
+    from seat_holder import SeatHolder
 
 class Reserver:
     def __init__(self, headless, url, proxy, from_addr, to_addr, date, service_no, phone, email, selected_seats, passenger_list):
@@ -58,7 +58,7 @@ class Reserver:
 
         self.prev_time = 0
 
-    def hold_selected_seat(self, parent: 'SeatLocker', selected_seats = None):
+    def hold_selected_seat(self, parent: 'SeatHolder', selected_seats = None):
         self.start_browser()
         self.from_place()
         self.to_place()
@@ -120,14 +120,7 @@ class Reserver:
                     time.sleep(10)
 
                     #check for end time
-                    if parent.end_time != None:
-                        if datetime.now() >= parent.end_time:
-                            print("Time reached! Script stopped.")
-                            self.close()
-                            exit()
-
-                    else:
-                        print("It's None...")
+                    parent.is_doomsday()
 
                 else:
                     print(f"Seats are availabe for blocking....")
@@ -156,11 +149,7 @@ class Reserver:
         
 
         #check for end time
-        if parent.end_time != None:
-            if datetime.now() >= parent.end_time:
-                print("Time reached! Script stopped.")
-                self.close()
-                exit()
+        parent.is_doomsday()
 
         # time for booking.....
         self.book_time = time.time()
