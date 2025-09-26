@@ -136,12 +136,12 @@ class Reserver:
             if not self.check_if_present(list1, self.selected_seats):
                 log(f"[{self.unique_id}] Selected seat is still occupied....{count}")
                 #sleep for 1 minute..
-                time.sleep(60)
+                time.sleep(20)
 
                 # after sleeping.. refresh the page
                 self.show_layout()
                 print("clicked on layout...")
-                time.sleep(10)
+                time.sleep(5)
 
                 #check for end time...
                 if parent.is_doomsday(for_this_date=self.journy_date):
