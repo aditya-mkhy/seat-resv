@@ -518,7 +518,7 @@ class Reserver:
             if seat_num not in to_select:
                 continue
 
-            sleep(random.uniform(2, 3))
+            sleep(random.uniform(0.5, 1))
             seat.click()
             selected_count += 1
 
@@ -531,14 +531,14 @@ class Reserver:
         number = self.driver.find_element(By.XPATH, num_xpath)
         sleep(random.uniform(0.2, 0.8))
         write(number, self.phone)
-        sleep(random.uniform(0.9, 2.5))
+        sleep(random.uniform(0.3, 0.8))
 
 
         email_xpath = '//*[@id="email"]'
         email = self.driver.find_element(By.XPATH, email_xpath)
         sleep(random.uniform(0.2, 0.8))
         write(email, self.email_id)
-        sleep(random.uniform(0.9, 2.5))
+        sleep(random.uniform(0.3, 0.8))
 
 
     def passenger_details(self, passenger_list: List[List[str]]):
@@ -557,9 +557,9 @@ class Reserver:
             #name
             name_id = f"passengerNameForward{count}"
             name = passenger_table.find_element(By.ID, name_id)
-            sleep(random.uniform(0.2, 0.8))
+            sleep(random.uniform(0.2, 0.6))
             write(name, passenger[0])
-            sleep(random.uniform(0.9, 2.5))
+            sleep(random.uniform(0.5, 1))
 
             #age
             age_id = f"passengerAgeForward{count}"
@@ -569,13 +569,13 @@ class Reserver:
             write(age, passenger[2])
 
             #sleep for next
-            sleep(random.uniform(1, 3))
+            sleep(random.uniform(0.3, 1))
             count += 1
 
 
     def book_button(self):
         #book button
-        sleep(random.uniform(5, 10))
+        sleep(random.uniform(1, 1.5))
         book_btn_xpath = '//*[@id="BookNowBtn"]'
         book_btn = self.driver.find_element(By.XPATH, book_btn_xpath)
         book_btn.click()
@@ -584,14 +584,14 @@ class Reserver:
         payu_xpath = '//*[@id="citrus"]'
 
         payu = self.max_wait.until(EC.element_to_be_clickable((By.XPATH, payu_xpath)))
-        sleep(random.uniform(1, 4))
+        sleep(random.uniform(1, 1.5))
         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", payu)
-        sleep(random.uniform(1, 3))
+        sleep(random.uniform(1, 1.5))
         payu.click()
 
         payment_btn_xpath = '//*[@id="PgBtn"]'
         payment_btn_xpath = self.driver.find_element(By.XPATH, payment_btn_xpath)
-        sleep(random.uniform(1, 3))
+        sleep(random.uniform(1, 1.5))
         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", payment_btn_xpath)
         sleep(random.uniform(0.8, 1.5))
 
