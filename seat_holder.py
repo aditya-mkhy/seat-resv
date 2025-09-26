@@ -3,13 +3,13 @@ from reserver import Reserver
 from util import get_passenger_list, sleep, PyDb, get_phone, get_email
 import random
 from prox import Proxy
-from typing import Dict
+from typing import Dict, List
 from datetime import datetime
 from util import log
 import os
 import time
 
-OBJECT_TO_CLEAN = []
+OBJECT_TO_CLEAN : List[Reserver]  = []
 
 class MutliReserver(Reserver):
     def __init__(self, myname: str, data: dict, url: str, headless: bool = False, proxy: str = None):
@@ -110,6 +110,8 @@ class SeatHolder:
             self.reserver_obj[name] = multi_reserver
             OBJECT_TO_CLEAN.append(multi_reserver)
 
+            break
+
         
         # all threads are running
         log(f"All process are running on threads..count = {len(self.reserver_obj)}")
@@ -124,6 +126,12 @@ class SeatHolder:
         #check for script end time
         if self.end_time != None  and datetime.now() >= self.end_time:
             log("Doomsday time! The world is going to end. Bye....", type="warn")
+            log("Cleaning everything.....")
+
+            for obj in OBJECT_TO_CLEAN:
+                obj.close()
+            
+            log(f"Goodbye sir....")
             os._exit(0) # close everything....
         
         if for_this_date:

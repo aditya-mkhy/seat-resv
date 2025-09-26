@@ -65,6 +65,7 @@ class Reserver:
             try:
                 status = self.hold_selected_seat(parent=parent, selected_seats=selected_seats)
                 if status == "exit":
+                    self.close()
                     return
                 
                 self.error_count = 0
@@ -90,7 +91,6 @@ class Reserver:
                     log(f"Task is completed for id : {self.unique_id}")
                     self.close()
                     return
-
             
             log(f"Restarting the task for id : {self.unique_id}")
 
