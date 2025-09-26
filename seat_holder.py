@@ -9,6 +9,8 @@ from util import log
 import os
 import time
 
+OBJECT_TO_CLEAN = []
+
 class MutliReserver(Reserver):
     def __init__(self, myname: str, data: dict, url: str, headless: bool = False, proxy: str = None):
         
@@ -106,6 +108,7 @@ class SeatHolder:
             multi_reserver.thread_hold_selected_seat(parent = self)
 
             self.reserver_obj[name] = multi_reserver
+            OBJECT_TO_CLEAN.append(multi_reserver)
 
         
         # all threads are running
@@ -161,100 +164,7 @@ class SeatHolder:
                         self.service_no, None, None, selected_seats, None)
         
         reserver.hold_selected_seat(self)
-
-
-    
-    def book_method_1(self, use_proxy = True):
-        proxy = None
-        fastest_proxy = []
-
-
-
-        if use_proxy:
-            if len(self.proxy_obj.working_proxies) == 0:
-                #get proxy ony first run
-                self.proxy_obj.run()
-
-            fastest_proxy = self.proxy_obj.get_faster_proxy(count=10)
-            if len(fastest_proxy) == 0:
-                print("No proxy found...")
-                use_proxy = False
-
-            else:
-                proxy = fastest_proxy[0]
-
-
-        self.main_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-                            self.service_no, get_phone(), self.email, None, None)
-        
-        self.ord_seats, self.window_seats = self.main_reserver.get_avail_seats()
-
-        print(f"self.ord_seats ==> {self.ord_seats}")
-        print(f"self.window_seats  ==> {self.window_seats}")
-
-        self.combined_seats = []
-        if len(self.ord_seats) != 0:
-            self.combined_seats.append(self.ord_seats)
-
-        if len(self.window_seats) != 0:
-            self.combined_seats.append(self.window_seats)
-
-        print("Total Seats : ", len(self.window_seats) + len(self.ord_seats))
-
-        
-        total_proxy = len(fastest_proxy)
-        on_proxy = 1
-
-        while True:
-
-            num_seats_to_select = random.randint(self.min_select_seat, self.max_select_seat)
-            selected_seats = []
-
-            for i in range(num_seats_to_select):
-                if len(self.combined_seats) == 0:
-                    print("All Seats are seleted....")
-                    break
-
-                select_from = random.choice(self.combined_seats)
-
-                selected_seats.append(select_from[0])
-                select_from.remove(select_from[0])
-
-                if len(select_from) == 0:
-                    self.combined_seats.remove(select_from)
-
-            if len(selected_seats) == 0:
-                print("Seleted seat is empty... so stop the loop..")
-                break
-
-            self.obj_count += 1
-
-            if len(self.combined_seats) == 0:
-                print("This is the last seleted seats...")
-                print("So using the main thread... For blocking seats...")
-                print("SeletedSeats :", selected_seats)
-                passenger_list = self.passenger_info(count=len(selected_seats))
-                self.main_reserver.select_actions(selected_seats, passenger_list)
-                break
-
-            print(f"This is thread : <{self.obj_count}> {selected_seats}")
-            passenger_list = self.passenger_info(count=len(selected_seats))
-
-            if use_proxy:
-                proxy = fastest_proxy[on_proxy]
-                on_proxy += 1
-                if on_proxy >= total_proxy:
-                    on_proxy = 0
-
-
-            # thrd_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-            #                 self.service_no, get_phone(), self.email, selected_seats, passenger_list)
-            
-            # self.reserver_obj[self.obj_count] = thrd_reserver
-            # thrd_reserver.run_thrd()
-
-            
-        print("Finished...")
+        OBJECT_TO_CLEAN.append(reserver) # to close the object incase of fore exit
 
 
     def passenger_info(self, count = 5):
@@ -270,6 +180,99 @@ class SeatHolder:
             self.db['namePointer'] = pointer + count
 
         return passenger_list
+    
+    # def book_method_1(self, use_proxy = True):
+    #     proxy = None
+    #     fastest_proxy = []
+
+    #     if use_proxy:
+    #         if len(self.proxy_obj.working_proxies) == 0:
+    #             #get proxy ony first run
+    #             self.proxy_obj.run()
+
+    #         fastest_proxy = self.proxy_obj.get_faster_proxy(count=10)
+    #         if len(fastest_proxy) == 0:
+    #             print("No proxy found...")
+    #             use_proxy = False
+
+    #         else:
+    #             proxy = fastest_proxy[0]
+
+
+    #     self.main_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
+    #                         self.service_no, get_phone(), self.email, None, None)
+        
+    #     self.ord_seats, self.window_seats = self.main_reserver.get_avail_seats()
+
+    #     print(f"self.ord_seats ==> {self.ord_seats}")
+    #     print(f"self.window_seats  ==> {self.window_seats}")
+
+    #     self.combined_seats = []
+    #     if len(self.ord_seats) != 0:
+    #         self.combined_seats.append(self.ord_seats)
+
+    #     if len(self.window_seats) != 0:
+    #         self.combined_seats.append(self.window_seats)
+
+    #     print("Total Seats : ", len(self.window_seats) + len(self.ord_seats))
+
+        
+    #     total_proxy = len(fastest_proxy)
+    #     on_proxy = 1
+
+    #     while True:
+
+    #         num_seats_to_select = random.randint(self.min_select_seat, self.max_select_seat)
+    #         selected_seats = []
+
+    #         for i in range(num_seats_to_select):
+    #             if len(self.combined_seats) == 0:
+    #                 print("All Seats are seleted....")
+    #                 break
+
+    #             select_from = random.choice(self.combined_seats)
+
+    #             selected_seats.append(select_from[0])
+    #             select_from.remove(select_from[0])
+
+    #             if len(select_from) == 0:
+    #                 self.combined_seats.remove(select_from)
+
+    #         if len(selected_seats) == 0:
+    #             print("Seleted seat is empty... so stop the loop..")
+    #             break
+
+    #         self.obj_count += 1
+
+    #         if len(self.combined_seats) == 0:
+    #             print("This is the last seleted seats...")
+    #             print("So using the main thread... For blocking seats...")
+    #             print("SeletedSeats :", selected_seats)
+    #             passenger_list = self.passenger_info(count=len(selected_seats))
+    #             self.main_reserver.select_actions(selected_seats, passenger_list)
+    #             break
+
+    #         print(f"This is thread : <{self.obj_count}> {selected_seats}")
+    #         passenger_list = self.passenger_info(count=len(selected_seats))
+
+    #         if use_proxy:
+    #             proxy = fastest_proxy[on_proxy]
+    #             on_proxy += 1
+    #             if on_proxy >= total_proxy:
+    #                 on_proxy = 0
+
+
+    #         # thrd_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
+    #         #                 self.service_no, get_phone(), self.email, selected_seats, passenger_list)
+            
+    #         # self.reserver_obj[self.obj_count] = thrd_reserver
+    #         # thrd_reserver.run_thrd()
+
+            
+    #     print("Finished...")
+
+
+
     
 
 
