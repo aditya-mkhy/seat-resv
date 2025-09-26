@@ -290,9 +290,9 @@ class SeatHolder:
 
 if __name__ == "__main__":
 
-    seat_holder = SeatHolder(headless_mode = False)
+    seat_holder = SeatHolder(headless_mode = True)
 
-    date_str = "17-10-2025"
+    date_str = "26-10-2025"
     time_str = "01:00"
     seat_holder.run_until(date_str = date_str, time_str = time_str)
 
