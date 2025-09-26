@@ -125,6 +125,13 @@ def timeCal(sec):
         return f"{sec//216000}:{ str(sec%216000)[:2]} Days"
     else:
         return "CE"
+    
+def get_equal_sleep(time_in_minutes: int, num_tasks: int) -> float:
+    if num_tasks <= 0:
+        raise ValueError("Number of tasks must be greater than 0")
+
+    return (time_in_minutes * 60) / num_tasks
+
 
 
 if __name__ == "__main__":

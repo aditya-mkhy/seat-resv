@@ -14,6 +14,12 @@ from selenium.webdriver.remote.webelement import WebElement
 from threading import Thread
 from selenium.webdriver.common.keys import Keys
 
+myprint = print
+
+def print(*args, **kwargs):
+    return
+    myprint(*args, **kwargs)
+
 if TYPE_CHECKING:
     from seat_holder import SeatHolder
 
@@ -52,7 +58,7 @@ class Reserver:
         self.prev_book_time = 0
         self.is_finished = False
         self.unique_id = self.journy_date
-        self.time_taken = 10 # to available the seat for booking again -> default 5 minute
+        self.time_taken = 20 # to available the seat for booking again -> default 5 minute
         self.repeat_count = 1
 
         self.error_count = 0
@@ -71,7 +77,9 @@ class Reserver:
                 self.error_count = 0
 
             except Exception as e:
-                log(f"[{self.unique_id}] Error[hold_selected_seat_forver] : {e}")
+                log(f"[{self.unique_id}] Error[hold_selected_seat_forver] : {e}", type="error")
+                self.time_taken = 20
+                self.prev_book_time = 0
 
                 if parent.is_doomsday(for_this_date=self.journy_date) or self.is_finished:
                     log(f"Task is completed for id : {self.unique_id}")
@@ -176,6 +184,7 @@ class Reserver:
         # time for booking.....
         self.payment()
         self.prev_book_time = time.time()
+        sleep(random.uniform(5, 10))
 
         self.driver.quit()
 
@@ -185,12 +194,13 @@ class Reserver:
             return status
         
         self.repeat_count += 1
-        log(f"[{self.unique_id}] Task is finished, now repeting that task..for {self.repeat_count} times")
+        log(f"[{self.unique_id}] Task is finished, now repeting that task again..for {self.repeat_count} times")
         # self.driver.quit()
         return True
 
 
     def sleep_wait(self, parent: 'SeatHolder', mint: int):
+        log(f"[{self.unique_id}] Payment is made.... now waiting for {timeCal(int(mint * 60))}")
         for i in range(int(mint) * 2):
             time.sleep(30)
             if parent.is_doomsday(for_this_date=self.journy_date):

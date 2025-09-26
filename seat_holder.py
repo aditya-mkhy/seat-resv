@@ -1,6 +1,6 @@
 from threading import Thread
 from reserver import Reserver
-from util import get_passenger_list, sleep, PyDb, get_phone, get_email
+from util import get_passenger_list, sleep, PyDb, get_phone, get_email, get_equal_sleep, timeCal
 import random
 from prox import Proxy
 from typing import Dict, List
@@ -12,9 +12,8 @@ import time
 OBJECT_TO_CLEAN : List[Reserver]  = []
 
 class MutliReserver(Reserver):
-    def __init__(self, myname: str, data: dict, url: str, headless: bool = False, proxy: str = None):
+    def __init__(self, my_id: str, data: dict, url: str, headless: bool = False, proxy: str = None):
         
-        self.myname = myname
         self.thread = None
 
         # init the inherited class
@@ -32,12 +31,13 @@ class MutliReserver(Reserver):
             passenger_list = None
         )
 
-        log(f"Init MultiReserver with name = {self.myname}")
+        self.unique_id = my_id
+        log(f"Init MultiReserver with name = {self.unique_id}")
 
 
     def thread_hold_selected_seat(self, parent: "SeatHolder"):
-        log(f"Running MultiReserver with name = {self.myname}")
-        self.thread = Thread(target=self.hold_selected_seat, args=(parent,), daemon=True)
+        log(f"Running MultiReserver with name = {self.unique_id}")
+        self.thread = Thread(target=self.hold_selected_seat_forver, args=(parent,), daemon=True)
         self.thread.start()
 
 
@@ -89,17 +89,18 @@ class SeatHolder:
             ...
         }
         """
+        equal_sleep_time = get_equal_sleep(time_in_minutes=22, num_tasks=len(data))
 
-        for name in data:
-            if self.is_doomsday(for_this_date=data[name]['date']):
-                log(f"This date({data[name]['date']}) is already passed.. skipping this one", type='warn')
+        for my_id in data:
+            if self.is_doomsday(for_this_date=data[my_id]['date']):
+                log(f"This date({data[my_id]['date']}) is already passed.. skipping this one", type='warn')
                 continue
 
             proxy = use_proxy and self.proxy_obj.get_my_proxy()
 
             multi_reserver = MutliReserver(
-                myname = name, 
-                data = data[name], 
+                my_id = my_id, 
+                data = data[my_id], 
                 url = self.url,
                 headless = self.headless_mode,
                 proxy = proxy,
@@ -107,10 +108,12 @@ class SeatHolder:
 
             multi_reserver.thread_hold_selected_seat(parent = self)
 
-            self.reserver_obj[name] = multi_reserver
+            self.reserver_obj[my_id] = multi_reserver
             OBJECT_TO_CLEAN.append(multi_reserver)
 
-            break
+            # sleep for eqal gap between task.. to save resources
+            log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
+            sleep(equal_sleep_time)
 
         
         # all threads are running
@@ -287,7 +290,7 @@ class SeatHolder:
 
 if __name__ == "__main__":
 
-    seat_holder = SeatHolder(headless_mode = True)
+    seat_holder = SeatHolder(headless_mode = False)
 
     date_str = "17-10-2025"
     time_str = "01:00"
@@ -325,19 +328,20 @@ if __name__ == "__main__":
             "service_no" : "1701",
             "seat" : ['25'],
         },
+
+        "for 26-OCT" : {
+            "date" : "26-10-2025",
+            "from" : "kangra",
+            "to"   : "Shimla isbt",
+            "service_no" : "1721",
+            "seat" : ['25'],
+        },
     }
 
-    while True:
-        try:
+ 
+    seat_holder.hold_for_multiple_dates(data=data, use_proxy=False)
 
-            seat_holder.hold_for_multiple_dates(data=data, use_proxy=False)
-
-        except Exception as e:
-            log(f"Error[001] : {e}")
-
-        sleep(60)
-
-
+    
 
     # seat_locker.from_addr = "Shimla isbt"
     # seat_locker.to_addr = "kangra"
