@@ -9,6 +9,11 @@ from typing import Literal
 # Create log file with current date
 log_filename = f"logs/server_{datetime.now().strftime('%Y-%m-%d')}.log"
 
+myprint = print
+
+def print(*args, **kwargs):
+    # return
+    myprint(*args, **kwargs)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -131,6 +136,7 @@ def get_equal_sleep(time_in_minutes: int, num_tasks: int) -> float:
         raise ValueError("Number of tasks must be greater than 0")
 
     return (time_in_minutes * 60) / num_tasks
+
 
 
 

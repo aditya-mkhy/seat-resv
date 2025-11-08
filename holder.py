@@ -5,16 +5,19 @@ import random
 from prox import Proxy
 from typing import Dict, List
 from datetime import datetime
-from util import log
+from util import log, print
 import os
 import time
 
+
 OBJECT_TO_CLEAN : List[Reserver]  = []
+
 
 class MutliReserver(Reserver):
     def __init__(self, my_id: str, data: dict, url: str, headless: bool = False, proxy: str = None):
         
         self.thread = None
+
 
         # init the inherited class
         super().__init__(
@@ -91,6 +94,7 @@ class SeatHolder:
         """
         equal_sleep_time = get_equal_sleep(time_in_minutes=22, num_tasks=len(data))
 
+
         for my_id in data:
             if self.is_doomsday(for_this_date=data[my_id]['date']):
                 log(f"This date({data[my_id]['date']}) is already passed.. skipping this one", type='warn')
@@ -112,8 +116,9 @@ class SeatHolder:
             OBJECT_TO_CLEAN.append(multi_reserver)
 
             # sleep for eqal gap between task.. to save resources
-            log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
-            sleep(equal_sleep_time)
+            if len(data) != 1:
+                log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
+                #sleep(equal_sleep_time)
 
         
         # all threads are running
@@ -190,170 +195,40 @@ class SeatHolder:
         else:
             self.db['namePointer'] = pointer + count
 
-        return passenger_list
+        return [["Aditya Mukhiya", "Male", "22"]]
     
-    # def book_method_1(self, use_proxy = True):
-    #     proxy = None
-    #     fastest_proxy = []
-
-    #     if use_proxy:
-    #         if len(self.proxy_obj.working_proxies) == 0:
-    #             #get proxy ony first run
-    #             self.proxy_obj.run()
-
-    #         fastest_proxy = self.proxy_obj.get_faster_proxy(count=10)
-    #         if len(fastest_proxy) == 0:
-    #             print("No proxy found...")
-    #             use_proxy = False
-
-    #         else:
-    #             proxy = fastest_proxy[0]
-
-
-    #     self.main_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-    #                         self.service_no, get_phone(), self.email, None, None)
-        
-    #     self.ord_seats, self.window_seats = self.main_reserver.get_avail_seats()
-
-    #     print(f"self.ord_seats ==> {self.ord_seats}")
-    #     print(f"self.window_seats  ==> {self.window_seats}")
-
-    #     self.combined_seats = []
-    #     if len(self.ord_seats) != 0:
-    #         self.combined_seats.append(self.ord_seats)
-
-    #     if len(self.window_seats) != 0:
-    #         self.combined_seats.append(self.window_seats)
-
-    #     print("Total Seats : ", len(self.window_seats) + len(self.ord_seats))
-
-        
-    #     total_proxy = len(fastest_proxy)
-    #     on_proxy = 1
-
-    #     while True:
-
-    #         num_seats_to_select = random.randint(self.min_select_seat, self.max_select_seat)
-    #         selected_seats = []
-
-    #         for i in range(num_seats_to_select):
-    #             if len(self.combined_seats) == 0:
-    #                 print("All Seats are seleted....")
-    #                 break
-
-    #             select_from = random.choice(self.combined_seats)
-
-    #             selected_seats.append(select_from[0])
-    #             select_from.remove(select_from[0])
-
-    #             if len(select_from) == 0:
-    #                 self.combined_seats.remove(select_from)
-
-    #         if len(selected_seats) == 0:
-    #             print("Seleted seat is empty... so stop the loop..")
-    #             break
-
-    #         self.obj_count += 1
-
-    #         if len(self.combined_seats) == 0:
-    #             print("This is the last seleted seats...")
-    #             print("So using the main thread... For blocking seats...")
-    #             print("SeletedSeats :", selected_seats)
-    #             passenger_list = self.passenger_info(count=len(selected_seats))
-    #             self.main_reserver.select_actions(selected_seats, passenger_list)
-    #             break
-
-    #         print(f"This is thread : <{self.obj_count}> {selected_seats}")
-    #         passenger_list = self.passenger_info(count=len(selected_seats))
-
-    #         if use_proxy:
-    #             proxy = fastest_proxy[on_proxy]
-    #             on_proxy += 1
-    #             if on_proxy >= total_proxy:
-    #                 on_proxy = 0
-
-
-    #         # thrd_reserver = Reserver(self.headless_mode, self.url, proxy, self.from_addr, self.to_addr, self.journy_date,
-    #         #                 self.service_no, get_phone(), self.email, selected_seats, passenger_list)
-            
-    #         # self.reserver_obj[self.obj_count] = thrd_reserver
-    #         # thrd_reserver.run_thrd()
-
-            
-    #     print("Finished...")
-
-
-
     
 
 
 
 if __name__ == "__main__":
 
-    seat_holder = SeatHolder(headless_mode = True)
+    seat_holder = SeatHolder(headless_mode = False)
 
+    # set time to stop this script
     date_str = "26-10-2025"
     time_str = "01:00"
     seat_holder.run_until(date_str = date_str, time_str = time_str)
 
     data = {
-        "for 14-OCT" : {
-            "date" : "14-10-2025",
-            "from" : "Shimla isbt",
-            "to"   : "kangra",
-            "service_no" : "1701",
-            "seat" : ['25'],
-        },
-
-        "for 15-OCT" : {
-            "date" : "15-10-2025",
-            "from" : "Shimla isbt",
-            "to"   : "kangra",
-            "service_no" : "1701",
-            "seat" : ['25'],
-        },
-    
-        "for 16-OCT" : {
-            "date" : "16-10-2025",
-            "from" : "Shimla isbt",
-            "to"   : "kangra",
-            "service_no" : "1701",
-            "seat" : ['25'],
-        },
-
-        "for 17-OCT" : {
-            "date" : "17-10-2025",
-            "from" : "Shimla isbt",
-            "to"   : "kangra",
-            "service_no" : "1701",
-            "seat" : ['25'],
-        },
-
         "for 26-OCT" : {
             "date" : "26-10-2025",
+            "from" : "kangra",
+            "to"   : "Shimla isbt",
+            "service_no" : "908",
+            "seat" : ['25'],
+        },
+
+        "for 31-OCT" : {
+            "date" : "31-10-2025",
             "from" : "kangra",
             "to"   : "Shimla isbt",
             "service_no" : "1721",
             "seat" : ['25'],
         },
+
     }
 
- 
     seat_holder.hold_for_multiple_dates(data=data, use_proxy=False)
 
     
-
-    # seat_locker.from_addr = "Shimla isbt"
-    # seat_locker.to_addr = "kangra"
-    # seat_locker.journy_date = "25-09-2025"
-    # seat_locker.service_no = "261"
-
-    # selected_seats = ['20', '25', '30', '21', '31']
-    # use_proxy = False
-
-    # # set the end time...
-    # seat_locker.run_until(date_str = date_str, time_str = time_str)
-
-    # print(seat_locker.is_doomsday(for_this_date=seat_locker.journy_date))
-
-    # # seat_locker.hold_seat(use_proxy = use_proxy, selected_seats = selected_seats)

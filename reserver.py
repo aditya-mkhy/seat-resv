@@ -14,32 +14,15 @@ from selenium.webdriver.remote.webelement import WebElement
 from threading import Thread
 from selenium.webdriver.common.keys import Keys
 
-myprint = print
-
-def print(*args, **kwargs):
-    return
-    myprint(*args, **kwargs)
 
 if TYPE_CHECKING:
-    from seat_holder import SeatHolder
+    from holder import SeatHolder
 
 class Reserver:
     def __init__(self, headless, url, proxy, from_addr, to_addr, date, service_no, phone, email, selected_seats, passenger_list):
-
-        self.firefox_options = webdriver.FirefoxOptions()
-        if headless:
-            self.firefox_options.add_argument("--headless")
-            self.firefox_options.add_argument("--width=1920")
-            self.firefox_options.add_argument("--height=1080")
-
+        self.headless = headless
         self.proxy = proxy
-        if self.proxy:
-            self.firefox_options.set_preference("network.proxy.type", 1)  # Manual proxy configuration
-            self.firefox_options.set_preference("network.proxy.http", self.proxy.split(':')[0])
-            self.firefox_options.set_preference("network.proxy.http_port", int(self.proxy.split(':')[1]))
-            self.firefox_options.set_preference("network.proxy.ssl", self.proxy.split(':')[0])
-            self.firefox_options.set_preference("network.proxy.ssl_port", int(self.proxy.split(':')[1]))
-        
+        self.set_options(proxy=proxy)
 
         self.current_month = datetime.now().month
         # Open the URL
@@ -62,6 +45,24 @@ class Reserver:
         self.repeat_count = 1
 
         self.error_count = 0
+
+    def set_options(self, proxy):
+        self.firefox_options = webdriver.FirefoxOptions()
+        if self.headless:
+            self.firefox_options.add_argument("--headless")
+            self.firefox_options.add_argument("--width=1920")
+            self.firefox_options.add_argument("--height=1080")
+
+        if proxy:
+            self.proxy = proxy
+        
+        if self.proxy:
+            self.firefox_options.set_preference("network.proxy.type", 1)  # Manual proxy configuration
+            self.firefox_options.set_preference("network.proxy.http", self.proxy.split(':')[0])
+            self.firefox_options.set_preference("network.proxy.http_port", int(self.proxy.split(':')[1]))
+            self.firefox_options.set_preference("network.proxy.ssl", self.proxy.split(':')[0])
+            self.firefox_options.set_preference("network.proxy.ssl_port", int(self.proxy.split(':')[1]))
+        
 
 
     def hold_selected_seat_forver(self, parent: 'SeatHolder', selected_seats = None):
@@ -164,8 +165,8 @@ class Reserver:
 
         #get the random passenger list
         self.passenger_list = parent.passenger_info(count=len(self.selected_seats))
-        self.phone = get_phone() # get random phone number
-        self.email_id = get_email(self.passenger_list) # get email on the basis of passenger list
+        self.phone = "6230658655" # get_phone() # get random phone number
+        self.email_id = "mahadevadityamukhiya@gmail.com" #get_email(self.passenger_list) # get email on the basis of passenger list
 
     
         
@@ -183,6 +184,8 @@ class Reserver:
 
         # time for booking.....
         self.payment()
+        print("Done........")
+        sleep(60 ** 5)
         self.prev_book_time = time.time()
         sleep(random.uniform(5, 10))
 
@@ -201,13 +204,34 @@ class Reserver:
 
     def sleep_wait(self, parent: 'SeatHolder', mint: int):
         log(f"[{self.unique_id}] Payment is made.... now waiting for {timeCal(int(mint * 60))}")
-        for i in range(int(mint) * 2):
+        
+        # getting new proxy..
+        for i in range(int(mint)*2):
             time.sleep(30)
             if parent.is_doomsday(for_this_date=self.journy_date):
                 log(f"Task is completed for id : {self.unique_id}")
                 self.close()
                 return "exit"
+            
+        # # Half wait is over... now getting new proxy
+        # start_time = time.time()
+        # proxy = parent.proxy_obj.get_my_proxy()
+        # self.set_options(proxy=proxy)
+        # time_taken = time.time() - start_time
+        # print(f"TimeTakento get new proxy ==> {time_taken} Sec")
 
+        # remaining_time = (mint * 60 ) - time_taken 
+        # in_mint = int(remaining_time / 60)
+
+        # print(f"Mint raming ==> {in_mint// 2}")
+        # # getting new proxy..
+        # for i in range(in_mint):
+        #     time.sleep(30)
+        #     if parent.is_doomsday(for_this_date=self.journy_date):
+        #         log(f"Task is completed for id : {self.unique_id}")
+        #         self.close()
+        #         return "exit"
+            
 
     def check_if_present(self, big_list: list, small_list: list):
         # to chek if all the items of the small list is present in the big list
@@ -283,8 +307,8 @@ class Reserver:
         # Create ActionChains object
         self.actions = ActionChains(self.driver)
 
-        self.max_wait = WebDriverWait(self.driver, 180)
-        self.min_wait = WebDriverWait(self.driver, 30)
+        self.max_wait = WebDriverWait(self.driver, 240)
+        self.min_wait = WebDriverWait(self.driver, 120)
 
         self.driver.get(self.url)
 
@@ -403,7 +427,7 @@ class Reserver:
                 sleep(random.uniform(1.5, 2.5)) # Wait for transition
 
         # Select the specific date (e.g., 27)
-        date_element = self.driver.find_element(By.XPATH, f"//a[text()='{day}']")
+        date_element = self.max_wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[text()='{day}']")))
         date_element.click()
 
         sleep(random.uniform(1.2, 2.5))
@@ -467,8 +491,9 @@ class Reserver:
         except:
             raise ValueError(f"[{self.unique_id}] Show Layout button is not found...")
 
-        sleep(random.uniform(1, 2))
+        
         show_layout_btn.click()
+        sleep(random.uniform(1, 2))
 
     def avail_seats(self) -> List[WebElement]:
         seats_table_xpath = ".seatsSteerCS"
@@ -577,7 +602,7 @@ class Reserver:
         #book button
         sleep(random.uniform(1, 1.5))
         book_btn_xpath = '//*[@id="BookNowBtn"]'
-        book_btn = self.driver.find_element(By.XPATH, book_btn_xpath)
+        book_btn = self.max_wait.until(EC.element_to_be_clickable((By.XPATH, book_btn_xpath)))
         book_btn.click()
 
     def payment(self):
@@ -590,12 +615,12 @@ class Reserver:
         payu.click()
 
         payment_btn_xpath = '//*[@id="PgBtn"]'
-        payment_btn_xpath = self.driver.find_element(By.XPATH, payment_btn_xpath)
+        payment_btn = self.max_wait.until(EC.element_to_be_clickable((By.XPATH, payment_btn_xpath)))
         sleep(random.uniform(1, 1.5))
-        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", payment_btn_xpath)
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", payment_btn)
         sleep(random.uniform(0.8, 1.5))
 
-        payment_btn_xpath.click()
+        payment_btn.click()
 
 
 
