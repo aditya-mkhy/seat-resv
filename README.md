@@ -143,6 +143,7 @@ seat_holder.hold_for_multiple_dates(data=data, use_proxy=False)# starts holding 
 
 This project is licensed under the **MIT License**.  
 Free to use, modify, and share.
+
 <br>
 
 ## Credits
