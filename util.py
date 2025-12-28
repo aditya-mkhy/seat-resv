@@ -6,10 +6,29 @@ import logging
 from datetime import datetime
 from typing import Literal
 
+import winsound
+from datetime import datetime
+from threading import Thread
+import time
+
 # Create log file with current date
 log_filename = f"logs/server_{datetime.now().strftime('%Y-%m-%d')}.log"
 
 myprint = print
+
+
+def beep(duration: int = 60):
+    st_time = time.time()
+
+    while (time.time() - st_time) < duration:
+        winsound.Beep(1000, 500)
+        time.sleep(0.2)
+
+def beep_thrd(duration: int = 50):
+    thrd = Thread(target=beep, args=(duration,), daemon=True)
+    thrd.start()
+    return thrd
+
 
 def print(*args, **kwargs):
     # return
@@ -137,8 +156,14 @@ def get_equal_sleep(time_in_minutes: int, num_tasks: int) -> float:
 
     return (time_in_minutes * 60) / num_tasks
 
+def remove_from_list(l1: list, l2: list):
+    for item in l2:
+        if item in l1:
+            l1.remove(item)
 
-
+    return l1
 
 if __name__ == "__main__":
-    pass
+    beep_thrd(40)
+    while True:
+        time.sleep(0.4)

@@ -107,14 +107,15 @@ class Reserver:
 
 
 
-    def hold_selected_seat(self, parent: 'SeatHolder', selected_seats = None):
-        self.start_browser()
-        self.from_place()
-        self.to_place()
-        self.date_input()
-        self.search_btn()
-        self.select_service()
-        self.show_layout()
+    def hold_selected_seat(self, parent: 'SeatHolder', selected_seats = None, skip_open = False):
+        if not skip_open:
+            self.start_browser()
+            self.from_place()
+            self.to_place()
+            self.date_input()
+            self.search_btn()
+            self.select_service()
+            self.show_layout()
 
 
         if selected_seats:
@@ -167,8 +168,8 @@ class Reserver:
 
         #get the random passenger list
         self.passenger_list = parent.passenger_info(count=len(self.selected_seats))
-        self.phone = "6230658655" # get_phone() # get random phone number
-        self.email_id = "mahadevadityamukhiya@gmail.com" #get_email(self.passenger_list) # get email on the basis of passenger list
+        self.phone =  get_phone() # get random phone number
+        self.email_id = get_email(self.passenger_list) # get email on the basis of passenger list
 
     
         
@@ -386,6 +387,8 @@ class Reserver:
         month_year = date_obj.strftime("%B %Y")  # Output: "March 2025"
         day = date_obj.strftime("%d")  # Output: "28"
 
+        day = str(int(day))
+
         current_date = datetime.today()
 
         # Calculate difference in months
@@ -430,6 +433,8 @@ class Reserver:
                 sleep(random.uniform(1.5, 2.5)) # Wait for transition
 
         # Select the specific date (e.g., 27)
+        txt  =  f"//a[text()='{day}']"
+        print(f"finind data element... for ==> {txt}")
         date_element = self.max_wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[text()='{day}']")))
         date_element.click()
 

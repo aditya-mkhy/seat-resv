@@ -5,7 +5,7 @@ import random
 from prox import Proxy
 from typing import Dict, List
 from datetime import datetime
-from util import log, print
+from util import log, print, remove_from_list, beep_thrd
 import os
 import time
 
@@ -49,6 +49,7 @@ class SeatAvailability(Reserver):
 
         self.exclude_seats: List[str] = data['exclude']
         self.only_windows: bool = data['only_windows']
+        self.thread = None
 
         # init the inherited class
         super().__init__(
@@ -67,6 +68,10 @@ class SeatAvailability(Reserver):
 
         self.unique_id = my_id
         log(f"Init SeatAvailability with name = {self.unique_id}")
+
+    def thrd_check(self, parent: bool = None):
+        self.thread = Thread(target=self.check, args=(parent,), daemon=True)
+        self.thread.start()
 
     def check(self, parent = None):
         # open browswer 
@@ -91,7 +96,35 @@ class SeatAvailability(Reserver):
 
             print(f"OthersSeats ==> {other_seats}")
             print(f"WindowSeats ==> {window_seats}")
+
+            if not self.only_windows:
+                # add other seats to windows
+                window_seats.extend(other_seats)
+
+            # remove excludw seats
+            window_seats = remove_from_list(window_seats, self.exclude_seats)
+
+            if len(window_seats) == 0:
+                # seat not found....
+                time.sleep(30)
+                print("clicked on layout...")
+                time.sleep(5)
+
+                    #check for end time...
+                if parent.is_doomsday(for_this_date=self.journy_date):
+                    log(f"Task is completed for id : {self.unique_id}")
+                    self.close()
+                    return "exit"
+                
+                continue
+
+            # if seats are available
+            log(f"[{self.unique_id}] Seats are now availabe : {window_seats}")
+            beep_thrd(1000)
             break
+
+        # book the available seats
+        self.hold_selected_seat(parent, window_seats[:5], skip_open=True)
 
 
 
@@ -147,21 +180,21 @@ class SeatHolder:
                 headless = self.headless_mode,
             )
 
-            multi_reserver.check(parent = self)
+            multi_reserver.thrd_check(parent = self)
 
-        #     self.reserver_obj[my_id] = multi_reserver
-        #     OBJECT_TO_CLEAN.append(multi_reserver)
+            self.reserver_obj[my_id] = multi_reserver
+            OBJECT_TO_CLEAN.append(multi_reserver)
 
-        #     # sleep for eqal gap between task.. to save resources
-        #     if len(data) != 1:
-        #         log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
-        #         #sleep(equal_sleep_time)
+            # sleep for eqal gap between task.. to save resources
+            if len(data) != 1:
+                log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
+                #sleep(equal_sleep_time)
 
-        # # all threads are running
-        # log(f"All process are running on threads..count = {len(self.reserver_obj)}")
+        # all threads are running
+        log(f"All process are running on threads..count = {len(self.reserver_obj)}")
 
-        # for obj in self.reserver_obj.values():
-        #     obj.thread.join()
+        for obj in self.reserver_obj.values():
+            obj.thread.join()
 
         log(f"MultiReserver task completed successfully.....")
 
@@ -240,8 +273,6 @@ class SeatHolder:
             
             return False
 
-
-
     def hold_seat(self, selected_seats: list = None, use_proxy = False, upto: datetime  = None):
         """To hold a specific seat...."""
         proxy = None
@@ -314,7 +345,7 @@ if __name__ == "__main__":
             "from" : "Shimla isbt",
             "to"   : "kangra",
             "service_no" : "1701",
-            "exclude" : ['22'],
+            "exclude" : ['43'],
             "only_windows" : True,
         },
     }
