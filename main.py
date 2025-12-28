@@ -75,6 +75,46 @@ class SeatHolder:
         log(f"Script stop time : {self.end_time}")
 
 
+    def check_for_availability(self, data: dict, exclude: List[str], only_windows = True):
+        # this check for the availability of a window seats in the bus...
+        # use in the case to know if someone cancel their ticket
+        log("fun -> check_for_availability -> running....")
+        log(f"for data --> {data}")
+
+
+        equal_sleep_time = get_equal_sleep(time_in_minutes=22, num_tasks=len(data))
+
+
+        for my_id in data:
+            if self.is_doomsday(for_this_date=data[my_id]['date']):
+                log(f"This date({data[my_id]['date']}) is already passed.. skipping this one", type='warn')
+                continue
+
+            multi_reserver = MutliReserver(
+                my_id = my_id, 
+                data = data[my_id], 
+                url = self.url,
+                headless = self.headless_mode,
+                proxy = proxy,
+            )
+
+            multi_reserver.thread_hold_selected_seat(parent = self)
+
+            self.reserver_obj[my_id] = multi_reserver
+            OBJECT_TO_CLEAN.append(multi_reserver)
+
+            # sleep for eqal gap between task.. to save resources
+            if len(data) != 1:
+                log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
+                #sleep(equal_sleep_time)
+                
+        # all threads are running
+        log(f"All process are running on threads..count = {len(self.reserver_obj)}")
+
+        for obj in self.reserver_obj.values():
+            obj.thread.join()
+
+        log(f"MultiReserver task completed successfully.....")
 
     def hold_for_multiple_dates(self, data: dict, use_proxy = False):
         log("fun <- hold_for_multiple_dates -> running....")
