@@ -16,13 +16,12 @@ from selenium.webdriver.common.keys import Keys
 
 
 if TYPE_CHECKING:
-    from holder import SeatHolder
+    from main import SeatHolder
 
 class Reserver:
     def __init__(self, headless, url, proxy, from_addr, to_addr, date, service_no, phone, email, selected_seats, passenger_list):
         self.headless = headless
         self.proxy = proxy
-        self.set_options(proxy=proxy)
 
         self.current_month = datetime.now().month
         # Open the URL
@@ -45,9 +44,12 @@ class Reserver:
         self.repeat_count = 1
         self.error_count = 0
 
+        self.set_options(proxy=proxy)
+
+
     def set_options(self, proxy):
         self.firefox_options = webdriver.FirefoxOptions()
-        self.set_end_date(self.journy_date)
+        # self.set_end_date(self.journy_date)
         if self.headless:
             self.firefox_options.add_argument("--headless")
             self.firefox_options.add_argument("--width=1920")

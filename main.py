@@ -44,6 +44,56 @@ class MutliReserver(Reserver):
         self.thread.start()
 
 
+class SeatAvailability(Reserver):
+    def __init__(self,  my_id: str, data: dict, url: str, headless: bool = False):
+
+        self.exclude_seats: List[str] = data['exclude']
+        self.only_windows: bool = data['only_windows']
+
+        # init the inherited class
+        super().__init__(
+            headless = headless,
+            url = url,
+            proxy = None,
+            from_addr = data["from"],
+            to_addr = data["to"],
+            date = data["date"],
+            service_no = data["service_no"],
+            phone = None,
+            email = None,
+            selected_seats = None,
+            passenger_list = None
+        )
+
+        self.unique_id = my_id
+        log(f"Init SeatAvailability with name = {self.unique_id}")
+
+    def check(self, parent = None):
+        # open browswer 
+        self.start_browser()
+        self.from_place() # add from 
+        self.to_place() # add to
+        self.date_input() # date input
+        self.search_btn() # click on search
+        self.select_service() # select service
+        self.show_layout() # show bus layout
+
+
+        if self.exclude_seats:
+            log(f"[{self.unique_id}] Excluded Seats are  : {self.exclude_seats}")
+
+        # run until the seat is available
+        count = 0
+        while not self.is_finished: 
+
+            other_seats, window_seats = self.get_seats_data()
+            count += 1
+
+            print(f"OthersSeats ==> {other_seats}")
+            print(f"WindowSeats ==> {window_seats}")
+            break
+
+
 
 class SeatHolder:
     def __init__(self, headless_mode = False):
@@ -75,7 +125,7 @@ class SeatHolder:
         log(f"Script stop time : {self.end_time}")
 
 
-    def check_for_availability(self, data: dict, exclude: List[str], only_windows = True):
+    def check_for_availability(self, data: dict):
         # this check for the availability of a window seats in the bus...
         # use in the case to know if someone cancel their ticket
         log("fun -> check_for_availability -> running....")
@@ -90,29 +140,28 @@ class SeatHolder:
                 log(f"This date({data[my_id]['date']}) is already passed.. skipping this one", type='warn')
                 continue
 
-            multi_reserver = MutliReserver(
+            multi_reserver = SeatAvailability(
                 my_id = my_id, 
                 data = data[my_id], 
                 url = self.url,
                 headless = self.headless_mode,
-                proxy = proxy,
             )
 
-            multi_reserver.thread_hold_selected_seat(parent = self)
+            multi_reserver.check(parent = self)
 
-            self.reserver_obj[my_id] = multi_reserver
-            OBJECT_TO_CLEAN.append(multi_reserver)
+        #     self.reserver_obj[my_id] = multi_reserver
+        #     OBJECT_TO_CLEAN.append(multi_reserver)
 
-            # sleep for eqal gap between task.. to save resources
-            if len(data) != 1:
-                log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
-                #sleep(equal_sleep_time)
-                
-        # all threads are running
-        log(f"All process are running on threads..count = {len(self.reserver_obj)}")
+        #     # sleep for eqal gap between task.. to save resources
+        #     if len(data) != 1:
+        #         log(f"Sleeping for {timeCal(int(equal_sleep_time))} to save resurces...")
+        #         #sleep(equal_sleep_time)
 
-        for obj in self.reserver_obj.values():
-            obj.thread.join()
+        # # all threads are running
+        # log(f"All process are running on threads..count = {len(self.reserver_obj)}")
+
+        # for obj in self.reserver_obj.values():
+        #     obj.thread.join()
 
         log(f"MultiReserver task completed successfully.....")
 
@@ -246,29 +295,30 @@ if __name__ == "__main__":
     seat_holder = SeatHolder(headless_mode = False)
 
     # set time to stop this script
-    date_str = "26-10-2025"
+    date_str = "5-1-2026"
     time_str = "01:00"
     seat_holder.run_until(date_str = date_str, time_str = time_str)
 
     data = {
-        "for 26-OCT" : {
-            "date" : "26-10-2025",
-            "from" : "kangra",
-            "to"   : "Shimla isbt",
-            "service_no" : "908",
-            "seat" : ['25'],
+        "for 31-Dec" : {
+            "date" : "31-12-2025",
+            "from" : "Shimla isbt",
+            "to"   : "kangra",
+            "service_no" : "1701",
+            "exclude" : ['25'],
+            "only_windows" : True,
         },
 
-        "for 31-OCT" : {
-            "date" : "31-10-2025",
-            "from" : "kangra",
-            "to"   : "Shimla isbt",
-            "service_no" : "1721",
-            "seat" : ['25'],
+        "for 01-Jan" : {
+            "date" : "1-1-2026",
+            "from" : "Shimla isbt",
+            "to"   : "kangra",
+            "service_no" : "1701",
+            "exclude" : ['22'],
+            "only_windows" : True,
         },
-
     }
 
-    seat_holder.hold_for_multiple_dates(data=data, use_proxy=False)
+    seat_holder.check_for_availability(data=data)
 
     
